@@ -12,6 +12,6 @@ COPY . .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # 当容器启动时运行run_evaluate.py脚本
-CMD ["python3", "./run/run_evaluate.py"]
+#CMD ["python3", "./run/run_evaluate.py"]
 
 ENV PYTHONPATH="/root/biddingTrainEnv:${PYTHONPATH}"

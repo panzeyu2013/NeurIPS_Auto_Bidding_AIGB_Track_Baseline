@@ -5,7 +5,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from run_evaluate import run_test
+from run.run_evaluate import run_test
 
 torch.manual_seed(1)
 np.random.seed(1)

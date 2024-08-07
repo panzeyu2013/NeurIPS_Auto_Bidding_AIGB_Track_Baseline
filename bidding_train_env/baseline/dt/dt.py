@@ -218,7 +218,7 @@ class DecisionTransformer(nn.Module):
         action_preds = action_preds.reshape(-1, act_dim)[attention_mask.reshape(-1) > 0]
         action_target = action_target.reshape(-1, act_dim)[attention_mask.reshape(-1) > 0]
 
-        loss = torch.mean((action_preds - action_target) ** 2)
+        loss = torch.nn.functional.mse_loss(action_preds,(action_target))
 
         self.optimizer.zero_grad()
         loss.backward()

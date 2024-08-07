@@ -1,5 +1,7 @@
 FROM competition-hub-registry.cn-beijing.cr.aliyuncs.com/alimama-competition/bidding-results:base
 
+ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+
 # 设置工作目录为/root/biddingTrainEnv
 WORKDIR /root/biddingTrainEnv
 

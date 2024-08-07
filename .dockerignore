@@ -3,3 +3,6 @@
 *output*
 *data
 .git/
+saved_model/DTtest/normalize_dict.pt
+log
+*test.ipynb*

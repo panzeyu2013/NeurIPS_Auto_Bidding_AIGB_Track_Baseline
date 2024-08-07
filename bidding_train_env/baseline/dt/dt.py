@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 import math
-
+import numpy as np
 
 class CausalSelfAttention(nn.Module):
     def __init__(self, config):
@@ -70,12 +70,12 @@ class DecisionTransformer(nn.Module):
     def __init__(self, state_dim, act_dim, state_mean, state_std, action_tanh=False, K=10, max_ep_len=96, scale=2000,
                  target_return=4):
         super(DecisionTransformer, self).__init__()
-        self.device = "cpu"
+        self.device = "cuda"
 
         self.length_times = 3
         self.hidden_size = 64
-        self.state_mean = state_mean
-        self.state_std = state_std
+        self.state_mean = torch.from_numpy(state_mean).to(self.device)
+        self.state_std = torch.from_numpy(state_std).to(self.device)
         # assert self.hidden_size == config['n_embd']
         self.max_length = K
         self.max_ep_len = max_ep_len
@@ -134,6 +134,7 @@ class DecisionTransformer(nn.Module):
         action_embeddings = self.embed_action(actions)
         returns_embeddings = self.embed_return(returns_to_go)
         rewards_embeddings = self.embed_reward(rewards)
+        
         time_embeddings = self.embed_timestep(timesteps)
 
         state_embeddings = state_embeddings + time_embeddings
@@ -229,20 +230,20 @@ class DecisionTransformer(nn.Module):
     def take_actions(self, state, target_return=None, pre_reward=None):
         self.eval()
         if self.eval_states is None:
-            self.eval_states = torch.from_numpy(state).reshape(1, self.state_dim)
+            self.eval_states = torch.from_numpy(state).reshape(1, self.state_dim).to(self.device)
             ep_return = target_return if target_return is not None else self.target_return
-            self.eval_target_return = torch.tensor(ep_return, dtype=torch.float32).reshape(1, 1)
+            self.eval_target_return = torch.tensor(ep_return, dtype=torch.float32).reshape(1, 1).to(self.device)
         else:
             assert pre_reward is not None
-            cur_state = torch.from_numpy(state).reshape(1, self.state_dim)
+            cur_state = torch.from_numpy(state).reshape(1, self.state_dim).to(self.device)
             self.eval_states = torch.cat([self.eval_states, cur_state], dim=0)
             self.eval_rewards[-1] = pre_reward
             pred_return = self.eval_target_return[0, -1] - (pre_reward / self.scale)
             self.eval_target_return = torch.cat([self.eval_target_return, pred_return.reshape(1, 1)], dim=1)
             self.eval_timesteps = torch.cat(
-                [self.eval_timesteps, torch.ones((1, 1), dtype=torch.long) * self.eval_timesteps[:, -1] + 1], dim=1)
-        self.eval_actions = torch.cat([self.eval_actions, torch.zeros(1, self.act_dim)], dim=0)
-        self.eval_rewards = torch.cat([self.eval_rewards, torch.zeros(1)])
+                [self.eval_timesteps, torch.ones((1, 1), dtype=torch.long).to(self.device) * self.eval_timesteps[:, -1] + 1], dim=1)
+        self.eval_actions = torch.cat([self.eval_actions, torch.zeros(1, self.act_dim).to(self.device)], dim=0)
+        self.eval_rewards = torch.cat([self.eval_rewards, torch.zeros(1).to(self.device)])
 
         action = self.get_action(
             (self.eval_states.to(dtype=torch.float32) - self.state_mean) / self.state_std,
@@ -257,11 +258,11 @@ class DecisionTransformer(nn.Module):
 
     def init_eval(self):
         self.eval_states = None
-        self.eval_actions = torch.zeros((0, self.act_dim), dtype=torch.float32)
-        self.eval_rewards = torch.zeros(0, dtype=torch.float32)
+        self.eval_actions = torch.zeros((0, self.act_dim), dtype=torch.float32).to(self.device)
+        self.eval_rewards = torch.zeros(0, dtype=torch.float32).to(self.device)
 
         self.eval_target_return = None
-        self.eval_timesteps = torch.tensor(0, dtype=torch.long).reshape(1, 1)
+        self.eval_timesteps = torch.tensor(0, dtype=torch.long).reshape(1, 1).to(self.device)
 
         self.eval_episode_return, self.eval_episode_length = 0, 0
 

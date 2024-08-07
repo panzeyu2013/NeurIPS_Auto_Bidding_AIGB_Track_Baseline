@@ -5,7 +5,7 @@ import ast
 import numpy as np
 import pickle
 import random
-
+from tqdm import tqdm
 
 class EpisodeReplayBuffer(Dataset):
     def __init__(self, state_dim, act_dim, data_path, max_ep_len=24, scale=2000, K=20):
@@ -36,7 +36,7 @@ class EpisodeReplayBuffer(Dataset):
         reward = []
         action = []
         dones = []
-        for index, row in self.trajectories.iterrows():
+        for index, row in tqdm(self.trajectories.iterrows()):
             state.append(row["state"])
             reward.append(row['reward'])
             action.append(row["action"])

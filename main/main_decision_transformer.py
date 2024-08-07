@@ -3,7 +3,7 @@ import torch
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from run.run_decision_transformer import run_dt
+from run_decision_transformer import run_dt
 
 
 torch.manual_seed(1)

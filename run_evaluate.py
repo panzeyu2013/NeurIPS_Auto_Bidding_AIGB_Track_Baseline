@@ -2,6 +2,7 @@ import numpy as np
 import math
 import logging
 from bidding_train_env.strategy import PlayerBiddingStrategy
+from bidding_train_env.strategy.dt_bidding_strategy import DtBiddingStrategy
 from bidding_train_env.dataloader.test_dataloader import TestDataLoader
 from bidding_train_env.environment.offline_env import OfflineEnv
 
@@ -12,6 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+device = "cuda:0"
 
 def getScore_nips(reward, cpa, cpa_constraint):
     beta = 2
@@ -29,7 +31,7 @@ def run_test():
 
     data_loader = TestDataLoader(file_path='./data/traffic/period-7.csv')
     env = OfflineEnv()
-    agent = PlayerBiddingStrategy()
+    agent = DtBiddingStrategy()
     print(agent.name)
 
     keys, test_dict = data_loader.keys, data_loader.test_dict

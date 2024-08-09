@@ -1,4 +1,5 @@
-/data/
+/data/traffic/*
+/data/trajectory/*
 .idea/*
 /saved_model/
 *.DS_Store

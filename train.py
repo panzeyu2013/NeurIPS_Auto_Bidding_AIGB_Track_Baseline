@@ -5,7 +5,7 @@ import os
 from bidding_train_env.common.utils import normalize_state, normalize_reward, save_normalize_dict
 from bidding_train_env.baseline.dt.utils import EpisodeReplayBuffer
 from bidding_train_env.baseline.dt.dt import DecisionTransformer
-from run.run_evaluate import run_test2
+from run.run_evaluate import offline_testor
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from torch.utils.tensorboard.writer import SummaryWriter
 from tqdm import tqdm
@@ -41,7 +41,7 @@ def train_model():
 
     model = DecisionTransformer(state_dim=state_dim, act_dim=1, state_mean=replay_buffer.state_mean,
                                 state_std=replay_buffer.state_std)
-    batch_size = 128
+    batch_size = 128 
     size = len(replay_buffer.trajectories) // batch_size
     logger.info(f"Size: {size}")
 
@@ -50,6 +50,7 @@ def train_model():
     sampler = WeightedRandomSampler(replay_buffer.p_sample, num_samples=step_num * batch_size, replacement=True)
     dataloader = DataLoader(replay_buffer, sampler=sampler, batch_size=batch_size,num_workers=8)
 
+    testor = offline_testor(50,writer)
     model.train()
     model.to(device=device)
     i = 0
@@ -73,8 +74,10 @@ def train_model():
             model.init_eval()
             # logger.info(f"Test action: {model.take_actions(test_state)}")
             with torch.no_grad():
+                model.eval()
                 logger.info(f"Run Test")
-                run_test2(writer,i//size,model)
+                testor.test(model,i//size)
+                model.train()
 
 def load_model():
     """

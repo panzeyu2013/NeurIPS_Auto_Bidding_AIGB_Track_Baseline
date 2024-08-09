@@ -19,19 +19,22 @@ class PlayerBiddingStrategy(BaseBiddingStrategy):
         file_name = os.path.dirname(os.path.realpath(__file__))
         dir_name = os.path.dirname(file_name)
         dir_name = os.path.dirname(dir_name)
-        model_path = os.path.join(dir_name, "saved_model", "DTtest", "1", "dt.pt")
+        model_path = os.path.join(dir_name, "saved_model", "DTtest", "5.539", "1", "dt.pt")
         picklePath = os.path.join(dir_name, "saved_model", "DTtest", "normalize_dict.pkl")
 
         with open(picklePath, 'rb') as f:
             normalize_dict = pickle.load(f)
         
         self.device = "cuda:0"
-        self.model = DecisionTransformer(state_dim=16, act_dim=1, state_mean=normalize_dict["state_mean"],
-                                         state_std=normalize_dict["state_std"])
+
         if os.path.exists(model_path):
+            self.model = DecisionTransformer(state_dim=16, act_dim=1, state_mean=normalize_dict["state_mean"],
+                state_std=normalize_dict["state_std"])
             self.model.load_net(model_path)
             self.model.to(self.device)
-
+        else:
+            self.model = None
+            
     def reset(self):
         self.remaining_budget = self.budget
 
